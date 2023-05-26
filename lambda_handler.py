@@ -11,7 +11,7 @@ def lambda_handler(event, context):
     bucket_name = os.environ.get('BUCKET_NAME')
     client = boto3.client('s3')
     # path = event['path'].replace("/lambda/", "")
-    path = event['path'].split('/static/', 1)[1]
+    path = event['path'].split('/lambda/', 1)[1]
     print(path)
     try:
         client_response = client.get_object(
