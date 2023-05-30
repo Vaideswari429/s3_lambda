@@ -8,12 +8,10 @@ from botocore.exceptions import ClientError
 logging.getLogger().setLevel(logging.INFO)
 logger = logging.getLogger()
 
-# [1] Globally scoped resources
 # Initialize the resources once per Lambda execution environment by using global scope.
 _LAMBDA_S3_RESOURCE = { "resource" : resource('s3'), 
                         "bucket_name" : environ.get('BUCKET_NAME') }
 
-# [2] Define a Global class an AWS Resource: Amazon S3 bucket.
 class LambdaS3Class:
     """
     AWS S3 Resource Class
@@ -26,17 +24,14 @@ class LambdaS3Class:
         self.bucket_name = lambda_s3_resource["bucket_name"]
         self.bucket = self.resource.Bucket(self.bucket_name)
 
-# [3] Validate the event schema and return schema using Lambda Powertools
 def lambda_handler(event, context):
     """
     Lambda Entry Point
     """
-    # [4] Use the Global variables to optimize AWS resource connections
     global _LAMBDA_S3_RESOURCE
     s3_resource_class = LambdaS3Class(_LAMBDA_S3_RESOURCE)
     logger.debug("Event Path is '%s'", event['path'])
     
-    # [5] Explicitly pass the global resource to subsequent functions
     return get_data_from_s3(s3 = s3_resource_class,
             s3_file_key = event['path'].split('/static/', 1)[1])
 
