@@ -37,7 +37,7 @@ def lambda_handler(event, context):
     
     # [5] Explicitly pass the global resource to subsequent functions
     return get_data_from_s3(s3 = s3_resource_class,
-            s3_file_key = event['path'].split('/static/', 1)[1])
+            s3_file_key = event['path'].split('/lambda/', 1)[1])
 
 def get_data_from_s3(s3: LambdaS3Class,
                          s3_file_key: str):
@@ -53,7 +53,6 @@ def get_data_from_s3(s3: LambdaS3Class,
         response = {
             "headers": {
                 "Content-Type": content_type,
-                'Content-Length': content_length,
                 'Access-Control-Allow-Origin': '*',
                 'Cache-Control': 'no-store'
             },
