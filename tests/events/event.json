@@ -1,6 +1,6 @@
 {
    "httpMethod": "GET",
-   "path": "sample.txt",
+   "path": "/static/sample.txt",
    "queryStringParameters": {},
    "headers": {
       "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",

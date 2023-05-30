@@ -3,6 +3,7 @@ from typing import Any, Dict
 from boto3 import resource
 import base64
 import logging
+from botocore.exceptions import ClientError
 
 logging.getLogger().setLevel(logging.INFO)
 logger = logging.getLogger()
@@ -37,9 +38,9 @@ def lambda_handler(event, context):
     
     # [5] Explicitly pass the global resource to subsequent functions
     return get_data_from_s3(s3 = s3_resource_class,
-            s3_file_key = event['path'].split('/lambda/', 1)[1])
+            s3_file_key = event['path'].split('/static/', 1)[1])
 
-def get_data_from_s3(s3: LambdaS3Class,
+def get_data_from_s3( s3: LambdaS3Class,
                          s3_file_key: str):
     response = {}
     try:
@@ -61,7 +62,7 @@ def get_data_from_s3(s3: LambdaS3Class,
             "body": body
         }
 
-    except KeyError as index_error:
+    except ClientError as index_error:
         logger.exception("Exception is thrown for object '%s' from Bucket '%s': '%s'.", 
                          s3_file_key, s3.bucket_name, str(index_error))
         response['body'] = "Not Found: " + str(index_error)
