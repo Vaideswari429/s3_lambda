@@ -10,7 +10,6 @@ sys.path.append('./src/services')
 from src.services.app import LambdaS3Class
 from src.services.app import lambda_handler, get_data_from_s3
 
-@moto.mock_s3
 class TestSampleLambda(TestCase):
     """
     Test class for the application sample AWS Lambda Function
@@ -28,7 +27,6 @@ class TestSampleLambda(TestCase):
         s3_client = client('s3', region_name="us-east-1")
         s3_client.create_bucket(Bucket = self.test_s3_bucket_name )
 
-        mocked_s3_resource = resource("s3")
         mocked_s3_resource = { "resource" : resource('s3'),
                                "bucket_name" : self.test_s3_bucket_name }
         self.mocked_s3_class = LambdaS3Class(mocked_s3_resource)
