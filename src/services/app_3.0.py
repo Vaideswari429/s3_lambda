@@ -3,6 +3,7 @@ from typing import Any, Dict
 from boto3 import resource
 import base64
 import logging
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
 logger.setLevel(environ.get('LOG_LEVEL', 'INFO'))
