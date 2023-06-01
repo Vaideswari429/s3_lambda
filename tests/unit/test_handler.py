@@ -10,6 +10,7 @@ sys.path.append('./src/services')
 from src.services.app import LambdaS3Class
 from src.services.app import lambda_handler, get_data_from_s3
 
+@moto.mock_s3
 class TestSampleLambda(TestCase):
     """
     Test class for the application sample AWS Lambda Function
@@ -26,12 +27,9 @@ class TestSampleLambda(TestCase):
 
         s3_client = client('s3', region_name="us-east-1")
         s3_client.create_bucket(Bucket = self.test_s3_bucket_name )
-
-        mocked_s3_resource = { "resource" : resource('s3'),
-                               "bucket_name" : self.test_s3_bucket_name }
-        self.mocked_s3_class = LambdaS3Class(mocked_s3_resource)
+        
+        self.mocked_s3_class = LambdaS3Class()
         self.bucket_key = "sample.txt"
-        self.mocked_s3_class.bucket
         s3_client.put_object(
             Body=f"Hello World".encode('utf-8'),
             Bucket=self.test_s3_bucket_name,
@@ -63,7 +61,7 @@ class TestSampleLambda(TestCase):
                               self.mocked_s3_class,
                               "sample1.txt"
                             )
-
+        print(self.mocked_s3_class.bucket)
         self.assertEqual(test_return_value["statusCode"], 404)
         self.assertIn("Not Found", test_return_value["body"])
 
