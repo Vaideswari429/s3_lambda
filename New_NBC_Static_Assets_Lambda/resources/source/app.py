@@ -17,7 +17,7 @@ class LambdaS3Class:
         Initialize an S3 Resource
         """
         self.resource = resource('s3')
-        self.bucket_name = environ.get('BUCKET_NAME')
+        self.bucket_name = environ.get('S3_BUCKET_NAME')
         self.bucket = self.resource.Bucket(self.bucket_name)
 
 def lambda_handler(event, context):
@@ -26,9 +26,15 @@ def lambda_handler(event, context):
     """
     s3_resource_class = LambdaS3Class()
     logger.debug("Event Path is '%s'", event['path'])
-    
-    return get_data_from_s3(s3 = s3_resource_class,
-            s3_file_key = event['path'].split('/static/', 1)[1])
+    static_path = environ.get('LAMBDA_PATH')
+    if static_path in event['path']:
+        return get_data_from_s3(s3 = s3_resource_class,
+                s3_file_key = event['path'].split(static_path, 1)[1])
+    else:
+        return {
+            "statusCode": 400,
+            "body": "Invalid request" 
+        }
 
 def get_data_from_s3( s3: LambdaS3Class,
                          s3_file_key: str):

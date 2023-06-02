@@ -5,10 +5,11 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 from boto3 import resource, client
 import moto
+import base64
 
-sys.path.append('./source')
-from src.services.app import LambdaS3Class
-from src.services.app import lambda_handler, get_data_from_s3
+sys.path.insert(1, 'resources/source')
+from app import LambdaS3Class
+from app import lambda_handler, get_data_from_s3
 
 @moto.mock_s3
 class TestSampleLambda(TestCase):
@@ -23,8 +24,9 @@ class TestSampleLambda(TestCase):
         """
 
         self.test_s3_bucket_name = "unit_test_s3_bucket"
-        os.environ["BUCKET_NAME"] = self.test_s3_bucket_name
-
+        os.environ["S3_BUCKET_NAME"] = self.test_s3_bucket_name
+        os.environ["LAMBDA_PATH"] = "/static/"
+        
         s3_client = client('s3', region_name="us-east-1")
         s3_client.create_bucket(Bucket = self.test_s3_bucket_name )
         
@@ -50,7 +52,7 @@ class TestSampleLambda(TestCase):
                         )
 
         body = self.mocked_s3_class.bucket.Object(self.bucket_key).get()['Body'].read()
-        self.assertEqual(test_return_value["body"], body)
+        self.assertEqual(test_return_value["body"], base64.b64encode(body))
         self.assertEqual(test_return_value["statusCode"], 200)
 
 
@@ -66,9 +68,8 @@ class TestSampleLambda(TestCase):
         self.assertEqual(test_return_value["statusCode"], 404)
         self.assertIn("Not Found", test_return_value["body"])
 
-
-    @patch("src.services.app.LambdaS3Class")
-    @patch("src.services.app.get_data_from_s3")
+    @patch("app.LambdaS3Class")
+    @patch("app.get_data_from_s3")
     def test_lambda_handler_valid_event_returns_200(self,
                             patch_get_data_from_s3 : MagicMock,
                             patch_lambda_s3_class : MagicMock
@@ -88,7 +89,7 @@ class TestSampleLambda(TestCase):
                },
                "isBase64Encoded": True,
                "statusCode": 200,
-               "body": "JVBERi0xLjcNCiW1tbW1D"
+               "body": "SGVsbG8gV29ybGQ="
                }
         patch_get_data_from_s3.return_value = return_value_200
 
@@ -106,7 +107,40 @@ class TestSampleLambda(TestCase):
         """
         Loads and validate test events from the file system
         """
-        event_file_name = f"tests/events/{test_event_file_name}.json"
+        event_file_name = f"resources/tests/events/{test_event_file_name}.json"
+        with open(event_file_name, "r", encoding='UTF-8') as file_handle:
+            event = json.load(file_handle)
+            return event
+        
+    @patch("app.LambdaS3Class")
+    @patch("app.get_data_from_s3")
+    def test_lambda_handler_invalid_event_returns_400(self,
+                            patch_get_data_from_s3 : MagicMock,
+                            patch_lambda_s3_class : MagicMock
+                            ):
+        """
+        For an invalid event path, get_data_from_s3 function is called,
+        Event path is validated and 400 is returned.
+        """
+
+        patch_lambda_s3_class.return_value = self.mocked_s3_class
+
+        return_value_400 = {
+               "statusCode": 400,
+               "body": "Invalid request" 
+            }
+        patch_get_data_from_s3.return_value = return_value_400
+
+        test_event = self.load_sample_event_from_file("error_event")
+        test_return_value = lambda_handler(event=test_event, context=None)
+
+        self.assertEqual(test_return_value, return_value_400)
+    
+    def load_sample_event_from_file(self, test_event_file_name: str) ->  dict:
+        """
+        Loads and validate test events from the file system
+        """
+        event_file_name = f"resources/tests/events/{test_event_file_name}.json"
         with open(event_file_name, "r", encoding='UTF-8') as file_handle:
             event = json.load(file_handle)
             return event
