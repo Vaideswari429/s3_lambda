@@ -1,0 +1,1 @@
+This project is used for retrieving static content like images / pdf through a lambda
