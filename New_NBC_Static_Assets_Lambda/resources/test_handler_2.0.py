@@ -38,6 +38,7 @@ class TestSampleLambda(TestCase):
             Key='sample.txt',
             ServerSideEncryption='AES256',
             StorageClass='STANDARD_IA',
+            ContentType='plain/text'
         )
 
 
