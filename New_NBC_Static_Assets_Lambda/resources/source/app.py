@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger()
 logger.setLevel(environ.get('LOG_LEVEL', 'INFO'))
 
-class LambdaS3Class:
+class S3Resource:
     """
     AWS S3 Resource Class
     """
@@ -24,10 +24,10 @@ def lambda_handler(event, context):
     """
     Lambda Entry Point
     """
-    s3_resource_class = LambdaS3Class()
-    logger.debug("Event Path is '%s'", event['path'])
+    s3_resource_class = S3Resource()
     static_path = environ.get('LAMBDA_PATH')
-    if static_path in event['path']:
+    if 'path' in event and event['path'].startswith(static_path):
+        logger.debug("Event Path is '%s'", event['path'])
         return get_data_from_s3(s3 = s3_resource_class,
                 s3_file_key = event['path'].split(static_path, 1)[1])
     else:
@@ -36,7 +36,7 @@ def lambda_handler(event, context):
             "body": "Invalid request" 
         }
 
-def get_data_from_s3( s3: LambdaS3Class,
+def get_data_from_s3( s3: S3Resource,
                          s3_file_key: str):
     response = {}
     try:
